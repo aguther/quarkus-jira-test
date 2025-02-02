@@ -3,6 +3,7 @@ package io.github.aguther.jira.quarkus;
 import io.github.aguther.jira.quarkus.client.JiraRestClientApi2;
 import io.github.aguther.jira.quarkus.test.Publisher;
 import jakarta.ws.rs.core.Response.Status.Family;
+import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -35,6 +36,17 @@ public class JiraTestCommand implements Runnable {
   public void run() {
     // execution is starting
     LOGGER.atInfo().log("Starting JiraTestCommand");
+
+    // get application configuration
+    var applicationConfig = ConfigProvider.getConfig();
+
+    // get config for the Jira URI
+    var baseUri = applicationConfig.getConfigValue("quarkus.rest-client.jira.uri");
+    if (baseUri == null || baseUri.getValue() == null || baseUri.getValue().isEmpty()) {
+      LOGGER.atError().log("Jira URI not found in configuration");
+      return;
+    }
+    LOGGER.atInfo().log("BaseUri='{}'", baseUri.getValue());
 
     // publish a message on the event bus for testing
     publisher.publish("Hello from JiraTestCommand");
